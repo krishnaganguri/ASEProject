@@ -1,0 +1,35 @@
+<!-- page-home.html -->
+<h1>Login Page</h1>
+
+<!--<table align="center">
+    <tr>
+        <td>User Name :</td>
+        <td colspan="2"><input type="text" ></td>
+    </tr>
+     <tr>
+        <td>Password :</td>
+        <td colspan="2"><input type="password"></td>
+    </tr>
+    <tr>
+        <td><button type="button"><a href="#direction" class="btn btn-success btn-lg">direction</a></button></td>
+        <td><button type="button"><a href="directions.html" class="btn btn-success btn-lg">Login</a></button></td>
+        <td><button type="button"><a href="#contact" class="btn btn-danger btn-lg">Register</a></button></td>
+        <td><button type="button"><a href="directions.html">dir</a></button></td></td>
+    </tr>
+</table>-->
+
+<div ng-app ng-controller="LoginController">
+    
+        
+   <div class="input">
+        Username: <input ng-model="user.firstName"></input>
+    <br/><br/>
+    Password: <input ng-model="user.pwd" type="password"></input>
+    <br/><br/>
+    <input type="submit" ng-click="login(user.firstName, user.pwd)" value="Login"></input>
+    &nbsp;
+    <button type="button"><a href="#contact" class="btn btn-danger btn-lg">Register</a></button>
+</div>   
+   
+</div>
+
