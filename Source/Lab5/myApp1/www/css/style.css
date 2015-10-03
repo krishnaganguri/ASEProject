@@ -1,0 +1,24 @@
+/* Empty. Add your own CSS if you like */
+.padding{
+
+background-color: burlywood;
+
+}
+.item.item-input,{
+background-color: bisque;
+}
+
+.bar.bar-stable .title {
+    background-color: bisque;
+    text-decoration-color: black;
+}
+
+a.tab-item, i.icon.icon, span.tab-title  {
+    background-color: coral;
+    color: beige;
+}
+
+.barcode{
+    text-decoration-color: brown;
+    font-size: 20px
+}

@@ -36,6 +36,7 @@ Welcome : <div id = "username" style="height:30;width:50%;background-color:red;b
     <p>Barcode:  {{st_place}}  </p>
     <input type="hidden" id="barcode" value="{{st_place}}"/>
     <button id="btn" ng-click="getDetails()"> Get Product Details </button><br>
+    <p>Name:  {{end_place}}  </p>
     </div>
     </body>
 </html>
@@ -68,7 +69,8 @@ $scope.getWeather = function() {
     
 $scope.getDetails = function() {
     
-     var url = 'http://api.walmartlabs.com/v1/items?apiKey=jxszbbbqcrce6aq3zv8zp9es&upc='+document.getElementById('barcode').value+'&format=json';
+     /*var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc='+document.getElementById('barcode').value+'&format=json';*/
+    var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc=026229460104&format=json';
     alert("url : "+url);
     $http.get(url).success(function(data){
     
@@ -76,9 +78,9 @@ $scope.getDetails = function() {
        alert("out");
       console.log(data);
        
-          name = data.barcode[0].text;
+          name = data.items[0].name;
                 
-    $scope.st_place = name;
+    $scope.end_place = name;
     
                      
 });
