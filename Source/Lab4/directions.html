@@ -69,9 +69,32 @@ $scope.getWeather = function() {
     
 $scope.getDetails = function() {
     
+    /*var response = $http.getResponse();
+    
+    response.addHeader("Access-Control-Allow-Origin", "*");*/
+    
+    $http.head("Access-Control-Allow-Origin", "*");
+    
+    var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc=026229460104&format=json&Access-Control-Allow-Origin=true';
+
+    /*var xhr = createCORSRequest('GET', url);
+if (!xhr) {
+  throw new Error('CORS not supported');
+}else{alert("yes")
+     
+     
+ var responseText = xhr.responseText;
+ console.log(responseText);
+         alert("yes11111");
+      name = responseText.items[0].name;
+      alert("nAME : "+name);
+ // process the response.
+
+
+ }*/
+    
      /*var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc='+document.getElementById('barcode').value+'&format=json';*/
-    var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc=026229460104&format=json';
-    alert("url : "+url);
+        alert("url : "+url);
     $http.get(url).success(function(data){
     
         
@@ -103,5 +126,32 @@ function LoginController($scope) {
 
     var name =  localStorage.getItem("name");   
 document.getElementById("username").innerHTML = name;
+    
+    
+function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+
+    // Check if the XMLHttpRequest object has a "withCredentials" property.
+    // "withCredentials" only exists on XMLHTTPRequest2 objects.
+    xhr.open(method, url, true);
+
+  } else if (typeof XDomainRequest != "undefined") {
+
+    // Otherwise, check if XDomainRequest.
+    // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+
+  } else {
+
+    // Otherwise, CORS is not supported by the browser.
+    xhr = null;
+
+  }
+  return xhr;
+}
+
+    
     
 </script>
