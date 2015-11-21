@@ -1,0 +1,12 @@
+{
+    "jscodehints.detectedExclusions": [
+        "/Users/mayanka/Desktop/GuRu/MaStErS/AsE/TA/AlchemyClient/plugins/cordova-plugin-console/www/logger.js",
+        "/Users/mayanka/Desktop/GuRu/MaStErS/AsE/TA/AlchemyClient/www/js/directives.js",
+        "/Users/mayanka/Desktop/GuRu/MaStErS/AsE/TA/AlchemyClient/www/js/app.js",
+        "/Users/mayanka/Desktop/GuRu/MaStErS/AsE/TA/AlchemyClient/www/js/controllers.js",
+        "D:/JOBNO- 2046/e drive/MS/ASE/Lab10/Tutorial 10/AlchemyClient/platforms/android/cordova/lib/emulator.js",
+        "D:/JOBNO- 2046/e drive/MS/ASE/Lab10/Tutorial 10/AlchemyClient/platforms/android/cordova/lib/exec.js",
+        "D:/JOBNO- 2046/e drive/MS/ASE/Lab10/Tutorial 10/AlchemyClient/www/js/app.js",
+        "C:/Users/ADMIN/AndroidStudioProjects/AlchemyClient/platforms/ios/www/lib/ionic/js/ionic.js"
+    ]
+}

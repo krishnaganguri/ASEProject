@@ -1,0 +1,22 @@
+<ion-view ng-controller="keywordCtrl" title="Keyword Extraction">
+    <ion-content padding="true" class="has-header">
+        <form class="list">
+            <div class="list">
+          
+        </div>
+            <label class="item item-input">
+                
+                <input type="text" placeholder="Please enter URL for keyword extraction" ng-model="SearchURL">
+            </label>
+        </form>
+        <button class="button button-dark button-block button-small" ng-click="getTranslate(SearchURL)">Submit</button>
+        <div>
+            
+            <p>Status : {{result.status}}</p>
+            <p>URL : {{result.url}}</p>
+            <p>Language : {{result.language}}</p>
+            <p>Highest relavance score : {{result.keywords[0].relevance}}</p>
+            <p>Keyword : {{result.keywords[0].text}}</p>
+        </div>
+    </ion-content>
+</ion-view>
