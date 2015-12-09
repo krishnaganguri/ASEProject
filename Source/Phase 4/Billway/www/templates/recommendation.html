@@ -1,0 +1,15 @@
+<ion-view title="Recommendation Page">
+    <ion-content class="barc">
+        <div>
+            <div class="bar bar-header bar-energized">
+              <h1 class="title">Recommendation page</h1>
+            </div>
+            <br><br>
+            <div class="list list-inset">
+                <p>The following items are recommended based on previous purchases</p>
+                <div ng-repeat="scan in records" class="display">{{ scan.productName }}</div>
+                
+            </div>
+            
+    </ion-content>
+</ion-view>
