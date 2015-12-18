@@ -7,7 +7,7 @@ var UserLogin = (function () {
       return { 
               
         Login:function($http,username,password,$scope,$state){
-            //alert("Singleton function for login")
+            
             user = new User();
             console.log("inside login function");
         $http({
@@ -19,13 +19,12 @@ var UserLogin = (function () {
         .success(function(data){
            
             if(data==""){
-                //alert("null");
+               
                 $scope.sucmsg ="";
                   $scope.errormsg = "No user found"       
                         $state.go("login");
             }else{
-               // alert("mobile : "+data[0].mobile);
-                //alert("pass : "+data[0].firstname);
+               
               if (username == data[0].mobile && password == data[0].password) {
                         localStorage.setItem("name" , data[0].firstname);
                         localStorage.setItem("lname" , data[0].lastname);
@@ -36,9 +35,9 @@ var UserLogin = (function () {
                         localStorage.setItem("city" , data[0].city);
                         localStorage.setItem("country" , data[0].country);
                         localStorage.setItem("password" , data[0].password);
-                        /*localStorage.setItem("mobile" , data[0].mobile);*/
+                       
                   user.login($state);
-                  //$state.go("home");
+                  
                     } else {
                         
                        $scope.errormsg = "Invalid credentials"
@@ -47,10 +46,8 @@ var UserLogin = (function () {
                         
                     }
             
-            
             }
             
-
             })
         }
         
@@ -60,8 +57,7 @@ var UserLogin = (function () {
   };
 
   return {
-    // Get the Singleton instance if one exists
-    // or create one if it doesn't
+   
     getInstance: function () {
       if ( !instance ) {
         instance = init();

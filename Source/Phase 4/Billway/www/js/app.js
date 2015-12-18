@@ -1,6 +1,5 @@
-var imageApp=angular.module('starter', ['ionic','ngCordova','firebase']);
+var imageApp=angular.module('starter', ['ionic','ngCordova','chart.js']);
 
-//var fb = new Firebase("https://brilliant-fire-9489.firebaseio.com/"); //ur firebase url
 
 imageApp.run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -27,16 +26,10 @@ imageApp.config(function($stateProvider, $urlRouterProvider) {
             controller: "ProfileController",
             cache: false
         })
-    .state("itemscan", {
-            url: "/profile",
-            templateUrl: "templates/itemscan.html",
-            controller: "ItemScanController",
-            cache: false
-        })
-        .state("secure", {
-            url: "/secure",
-            templateUrl: "templates/secure.html",
-            controller: "SecureController"
+    .state("analysis", {
+            url: "/analysis",
+            templateUrl: "templates/analysis.html",
+            controller: "AnalysisController"
         })
     .state("home", {
             url: "/home",
@@ -67,7 +60,9 @@ imageApp.config(function($stateProvider, $urlRouterProvider) {
             url: "/recommend",
             templateUrl: "templates/recommendation.html",
             controller: "RecommendController"
+       
         })
+    
     .state("invoice", {
             url: "/invoice",
             templateUrl: "templates/invoice.html",
@@ -75,6 +70,17 @@ imageApp.config(function($stateProvider, $urlRouterProvider) {
         });
     $urlRouterProvider.otherwise('/login');
 });
+
+'use strict';
+
+ //Controllers 
+google.load("visualization", "1", {packages:["corechart"]});
+google.setOnLoadCallback(function () {
+    angular.bootstrap(document.body, ['starter']);
+});
+
+
+//This is used for user to login into app and can to go to signup page
 
 imageApp.controller("LoginController", function($scope,$http, $state, $firebaseAuth, $cordovaBarcodeScanner, $httpParamSerializerJQLike,$q, $cordovaCamera,$cordovaToast) {
 
@@ -86,19 +92,10 @@ imageApp.controller("LoginController", function($scope,$http, $state, $firebaseA
     
     
     $scope.login = function(username, password) {
-        
-        /*$cordovaToast.show("hi kk", "short", "bottom").then(function(success) {
-            console.log("The toast was shown");
-        }, function (error) {
-            console.log("The toast was not shown due to " + error);
-        });*/
-        
+       
         userLogin = UserLogin.getInstance()
         userLogin.Login($http,username,password,$scope,$state)
-              
-        
-             
-        }
+     }
     
     $scope.delete = function(username, password) {
               
@@ -112,21 +109,17 @@ imageApp.controller("LoginController", function($scope,$http, $state, $firebaseA
         .success(function(data){
            
             if(data==""){
-                //alert("null");
-                  $scope.errormsg = "No user found"       
+               $scope.errormsg = "No user found"       
                         
             }else{
                
               if (username == data[0].name && password == data[0].password) {
-                        /*localStorage.setItem("name" , username);
-                  $state.go("login");*/
                   
                   $http({
                       method: 'DELETE' ,   
                 url: 'https://api.mongolab.com/api/1/databases/aselab7/collections/users/'+data[0]._id.$oid+'?apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
 
                      }).success(function (data) {
-                     //alert("deleted");
                       $scope.sucmsg = "User deleted successfully"
                      })                  
                   
@@ -143,61 +136,96 @@ imageApp.controller("LoginController", function($scope,$http, $state, $firebaseA
     
 
     $scope.register = function(username, password) {
-                
-        //$state.go("register");
-        user.register($state);
+         user.register($state);
     }
-    
-    
-            
         
 });
 
-//secure controller
+//This is to get analysis of all purchases made by user, as graph
 
-imageApp.controller("SecureController", function($scope, $ionicHistory, $firebaseArray, $cordovaCamera) {
+imageApp.controller("AnalysisController", function($scope, $http,$state) {
 
-    /*$ionicHistory.clearHistory();  //for clearing user login history
+   var mobile = localStorage.getItem("mobile");
+      $http({
+                    type: "GET",
+                    url : 'https://api.mongolab.com/api/1/databases/aselab7/collections/recommendation?q={mobile:\''+mobile+'\'}&apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
 
-    $scope.images = [];
+                    contentType: "application/json"
+                })
+                .success(function(data){
 
-    var fbAuth = fb.getAuth();
-    if(fbAuth) {
-        var userReference = fb.child("users/" + fbAuth.uid);   //capture the user reference in data structure ,it navigates to specific user page in freebase
-        var syncArray = $firebaseArray(userReference.child("images"));  //binding specific node in firebase to an array object in angularjs
-        $scope.images = syncArray;
-    } else {
-        $state.go("login");  //directs to firebase page
-    }
+                   var category=[];
+                      var label=[];
+                      var values=[];
+                      var preRecords = data[0].products;
+                        var category1=[];
+                        var category2=[];
+                        category1.push("Category");
+                        category1.push("Value");
+                        category2.push(category1);
+                        category1=[];
 
-    $scope.upload = function() {
-        var options = {
-            quality : 75,
-            destinationType : Camera.DestinationType.DATA_URL,
-            sourceType : Camera.PictureSourceType.CAMERA,
-            allowEdit : true,
-            encodingType: Camera.EncodingType.JPEG,
-            popoverOptions: CameraPopoverOptions,
-            targetWidth: 500,
-            targetHeight: 500,
-            saveToPhotoAlbum: false
+                      for ( var i = 0; i < preRecords.length; i++ ) {
+                                var temp = preRecords[i].split("|");
+                          if(temp[2]!=""){
+                               category.push(temp[2]);
+                          }
+
+                            }
+                       var a = [], b = [], prev;
+
+                                    category.sort();
+                            for ( var i = 0; i < category.length; i++ ) {
+                                        if ( category[i] !== prev ) {
+                                            a.push(category[i]);
+                                            b.push(1);
+                                        } else {
+                                            b[b.length-1]++;
+                                        }
+                                        prev = category[i];
+                                    }
+
+                              for ( var i = 0; i < b.length; i++ ) {
+                                        label.push(a[i]);
+                                        values.push(b[i]);
+                                category1.push(a[i]);
+                                  
+                                  
+                                  category1.push(b[i]);
+                                  category2.push(category1);
+                                  category1 = [];
+
+                                    }
+                    $scope.labels = label;
+                var data = google.visualization.arrayToDataTable(category2);
+          
+          
+	var options = {
+          title: 'Category Analysis',
+        backgroundColor: 'violet',
+           
+            height: 400
+        
         };
-        $cordovaCamera.getPicture(options).then(function(imageData) {
-            syncArray.$add({image: imageData}).then(function() {
-                alert("Image has been uploaded");
-            });
-        }, function(error) {
-            console.error(error);
-        });
-    }*/
+        var chart = new google.visualization.PieChart(document.getElementById('chartdiv'));
+        chart.draw(data, options);
+         
+            })
+      
+      
+      
+      $scope.goBack = function() {
+          
+          $state.go("home");
+      }
 
 });
 
+//This is home page controller, where user can scan the items and have links to go to mybills page, profile page, recommendations and analysis page
 
-imageApp.controller("HomePageController", function($scope, $state,$http,$cordovaBarcodeScanner,$cordovaCamera) {
-    
+imageApp.controller("HomePageController", function($scope, $state,$http,$cordovaBarcodeScanner,$cordovaCamera,$ionicSideMenuDelegate) {
+        
      var appUser = new User();
-    
     
     var detailsStorage = new DetailsFunction();
         var details = detailsStorage.createStorage({});
@@ -208,8 +236,7 @@ imageApp.controller("HomePageController", function($scope, $state,$http,$cordova
         var user = localStorage.getItem("name");
     $scope.user = "Welcome "+username;
     $scope.mobile = "Mobile : "+mobileNum
-    //alert("user : "+user);
-    
+   
     $scope.getWeather = function() {
 
     var url = document.getElementById('imageurl').value;
@@ -233,15 +260,10 @@ $scope.getDetails = function() {
      
     
      var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc='+document.getElementById('barcode').value+'&format=json';
-    
-   /* var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc=036000291452&format=json';*/
-    
-        //alert("url : "+url);
+ 
     $http.get(url).success(function(data){
     
-        
-      // alert("out");
-      console.log(data);
+        console.log(data);
        
           name = data.items[0].name;
        price = data.items[0].salePrice;
@@ -255,9 +277,6 @@ $scope.getDetails = function() {
     
     
      $scope.changePass = function() {
-        // alert("in pass");
-        // alert("name : "+localStorage.getItem("name"));
-         
          $state.go("changePass");
      };
     
@@ -280,7 +299,6 @@ $scope.getDetails = function() {
 		 
 		  contentType: "application/json"
              }).success(function (data) { 
-            // alert(1);
              })
                 
             } 
@@ -296,12 +314,9 @@ $scope.getDetails = function() {
     $scope.productNo = 0;
     
     $scope.scan = function() {
-       // alert("inside scan");
+       
         $cordovaBarcodeScanner.scan().then(function(barcodeData) {
             
-        // Success! Barcode data is here
-            //alert("text : "+barcodeData.text);
-            //alert("format : "+barcodeData.format);
             text = barcodeData.text;
             format = barcodeData.format;
             $scope.barcode = text;
@@ -312,20 +327,14 @@ $scope.getDetails = function() {
             //walmart
             var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc='+text+'&format=json';
     
-                //alert("url : "+url);
-            $http.get(url).success(function(data){
-
-
-              // alert("out");
-              console.log(data);
+                $http.get(url).success(function(data){
+                    console.log(data);
 
                   name = data.items[0].name;
                price = data.items[0].salePrice;
                 categoryPath = data.items[0].categoryPath;
 
-               /* alert("name : "+name);
-                alert("price : "+price);*/
-                
+             
             $scope.end_place = name;
             $scope.price = price;
             var category =    categoryPath.split("/");
@@ -334,19 +343,15 @@ $scope.getDetails = function() {
             
             $scope.productName.push(name); 
             $scope.productPrice.push(price);
-           // $scope.product.push({productName:name,productPrice:price});
+          
             $scope.product.push(name+"|"+price+"|"+category[1]);
-           // $scope.product.push(price);    
+              
                 
             $scope.productNo = $scope.productNo +1;    
             $scope.scans.push( $scope.productNo+" : Product : "+name+" : Price : "+price); 
-                //alert("category : "+category[1]);
+               
             });
-            
-            
-            //alert(); 
-            
-            /*$scope.barcodes.push( "Barcode is "+text+" with format "+format);*/
+           
       },function(error) {
        alert("an error occured");
       });
@@ -357,34 +362,14 @@ $scope.getDetails = function() {
          $scope.scans = "";      
         var itemList =[];
         
-       /* var countTest=['a','b','a','c','a','b']
-        alert(countTest.count('a'));*/
-        
-        $scope.test=[];
-        
-        $scope.test.push("kk|2.3|a");
-        $scope.test.push("mouni|3.3|a");
-        $scope.test.push("mouni&kk|4.3|b");
-        
-       
-         localStorage.setItem("itemLength",$scope.test.length);
             
-        
-        
-        /*alert(" pro length : "+$scope.test.length)*/
-        
         for(var i=0;i<$scope.product.length;i++){
             localStorage.setItem("itemList"+i,$scope.product[i]);
-           // localStorage.setItem("itemList"+i,$scope.test[i]);
-           // localStorage.setItem("itemListp"+i,$scope.product[i].productPrice);
-        }
+            }
         
        
         localStorage.setItem("productLength",$scope.product.length);
-       //  localStorage.setItem("productLength",$scope.product.length);
-        
-      
-        
+       
         $state.go("invoice");
         
     }
@@ -396,20 +381,15 @@ $scope.getDetails = function() {
     }
     
  $scope.profile = function() {
-//alert("hi");
-   //$state.go("profile");
-     appUser.updateProfile($state);
+   appUser.updateProfile($state);
      }
  $scope.logout = function() {
-//alert("hi");
      localStorage.setItem("registerSuc","");
    $state.go("login");
      }
  
  $scope.myBills = function() {
-     
-     //alert(mobileNum);
-     
+    
      var dates;
      
      $http({
@@ -421,9 +401,8 @@ $scope.getDetails = function() {
         .success(function(data){
            
             if(data==""){
-                alert("null");
+               
                 $state.go("myBills");
-                  //$scope.errormsg = "Bills found"       
                       
             }else{
                
@@ -434,9 +413,7 @@ $scope.getDetails = function() {
                     
                 }
                 
-                //alert("dates : "+dates);
-                        /*localStorage.setItem("mobile" , data[0].mobile);*/
-                localStorage.setItem("dates" ,dates);
+                 localStorage.setItem("dates" ,dates);
                 
                 $state.go("myBills");
                   
@@ -453,199 +430,18 @@ $scope.getDetails = function() {
  
  
  $scope.showCharts = function(){
-     var mobile = localStorage.getItem("mobile");
-      $http({
-                    type: "GET",
-                    url : 'https://api.mongolab.com/api/1/databases/aselab7/collections/recommendation?q={mobile:\''+mobile+'\'}&apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
-
-                    contentType: "application/json"
-                })
-                .success(function(data){
-
-                   var category=[];
-          var category1=[];
-          var categoryFinal=[];
-          var preRecords = data[0].products;
-          
-          for ( var i = 0; i < preRecords.length; i++ ) {
-                    var temp = preRecords[i].split("|");
-              if(temp[2]!=""){
-                   category.push(temp[2]);
-              }
-                   
-                }
-           var a = [], b = [], prev;
-    
-                        category.sort();
-                for ( var i = 0; i < category.length; i++ ) {
-                            if ( category[i] !== prev ) {
-                                a.push(category[i]);
-                                b.push(1);
-                            } else {
-                                b[b.length-1]++;
-                            }
-                            prev = category[i];
-                        }
-
-                  for ( var i = 0; i < b.length; i++ ) {
-                            category1.push(a[i]);
-                            category1.push(b[i]);
-                      categoryFinal.push(category1);
-                      category1=[];
-                        }
-          alert("category : "+category);
-          alert("a : "+a);
-          alert("b : "+b);
-          alert("final : "+categoryFinal[0])
-          
-          
-          google.load("visualization", "1", {packages:["corechart"]});
-          google.setOnLoadCallback(drawChart);
-          function drawChart() {
-            var data = google.visualization.arrayToDataTable([
-              ['Task', 'Hours per Day'],
-              ['Work',     11],
-              ['Eat',      2],
-              ['Commute',  2],
-              ['Watch TV', 2],
-              ['Sleep',    7]
-            ]);
-
-            var options = {
-              title: 'My Daily Activities',
-              is3D: true,
-            };
-
-            var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));
-            chart.draw(data, options);
-          }
-      
-            })
+     location.reload();
+     $state.go("analysis");
      
  }
  
-});
-
-
-
-
-imageApp.controller("ItemScanController", function($scope, $state,$http,$cordovaBarcodeScanner,$cordovaCamera) {
-    
-    $scope.scans = [];
-    
-    $scope.productName = [];
-    $scope.productPrice = [];
-    $scope.product = [];
-    
-    $scope.scan = function() {
-       // alert("inside scan");
-        $cordovaBarcodeScanner.scan().then(function(barcodeData) {
-            
-        // Success! Barcode data is here
-            //alert("text : "+barcodeData.text);
-            //alert("format : "+barcodeData.format);
-            text = barcodeData.text;
-            format = barcodeData.format;
-            $scope.barcode = text;
-            $scope.format = format;
-            $scope.msg = "Barcode is "+text+" with format "+format
-            
-            
-            //walmart
-            var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc='+text+'&format=json';
-    
-                //alert("url : "+url);
-            $http.get(url).success(function(data){
-
-
-              // alert("out");
-              console.log(data);
-
-                  name = data.items[0].name;
-               price = data.items[0].salePrice;
-
-               /* alert("name : "+name);
-                alert("price : "+price);*/
-                
-            $scope.end_place = name;
-            $scope.price = price;
-            $scope.productdetails = "Product : "+name+" : Price : "+price;    
-            
-            $scope.productName.push(name); 
-            $scope.productPrice.push(price);
-           // $scope.product.push({productName:name,productPrice:price});
-            $scope.product.push(name+"|"+price);
-           // $scope.product.push(price);    
-                
-                
-            $scope.scans.push( "Product : "+name+" : Price : "+price);    
-            });
-            
-            
-            //alert(); 
-            
-            /*$scope.barcodes.push( "Barcode is "+text+" with format "+format);*/
-      },function(error) {
-       alert("an error occured");
-      });
-    }
-    
-    $scope.doneScan = function(){
-        alert("hi");
-         $scope.addScans = "";      
-        var itemList =[];
-        
-        $scope.test=[];
-        
-        $scope.test.push("abc1|5.3");
-        $scope.test.push("xyz1|6.3");
-        $scope.test.push("abc&xyz1|7.3");
-        $scope.test.push("mounifrndkk1|8.3");
-        var x=parseInt(localStorage.getItem("itemLength"));
-       // alert(" pro length : "+x);
-        var y = parseInt($scope.test.length);
-        
-       var z = x + y;
-       // alert("hello"+y);
-            
-       // alert(" pro length1 : "+z);
-        
-        /*alert(" pro length : "+$scope.test.length)*/
-        j=0;
-        for(var i=x;i<z;i++){
-         //   alert(" ival : "+i);
-            
-           localStorage.setItem("itemList"+i,$scope.product[i]);
-           // localStorage.setItem("itemList"+i,$scope.test[j]);
-            
-         //   alert(" ivalue : "+$scope.test[j]);
-           j++;
-            // localStorage.setItem("itemListp"+i,$scope.product[i].productPrice);
-        }
-        
-       
-        localStorage.setItem("productLength",z);
-        
-      
-        
-        $state.go("invoice");
-        
-    }
-
-});
-
-
-
-
+//In this user can register for app
+ 
 imageApp.controller("RegistrationController", function($scope,$http, $state, $httpParamSerializerJQLike) {
 
-    
-    
-    
     $scope.createUser = function() {
                console.log("inside login function");
-        //var name = document.getElementById("username").value;
-       // alert("signup");
+        
         var firstname = document.getElementById("firstname").value;
         var lastname = document.getElementById("lastname").value;
         var mobile = document.getElementById("mobile").value;
@@ -658,7 +454,7 @@ imageApp.controller("RegistrationController", function($scope,$http, $state, $ht
         var repass = document.getElementById("repass").value;
         //alert("mobile : "+mobile);
         if(firstname==""){
-            $scope.errormsg = "Please enter Firtsname";
+            $scope.errormsg = "Please enter First Name";
         }else if(mobile == ""){
             $scope.errormsg = "Please enter Mobile number";
         }else if(email == ""){
@@ -707,8 +503,6 @@ imageApp.controller("RegistrationController", function($scope,$http, $state, $ht
                     $state.go("login");
                         })
                 
-                       
-                $state.go("login");
             }else{
                 
                 $scope.errormsg = "Mobile number already exists";
@@ -722,10 +516,7 @@ imageApp.controller("RegistrationController", function($scope,$http, $state, $ht
             
         }
         
-        
-        
-        //alert("name : "+name);
-        
+      
 }
    
 $scope.back = function() { 
@@ -734,10 +525,8 @@ $scope.back = function() {
 });
 
 
-
+// In this user can update his profile
 imageApp.controller("ProfileController", function($scope,$http, $state, $httpParamSerializerJQLike) {
-  
-    
     
   var name = localStorage.getItem("name");
         $scope.name = name;
@@ -782,9 +571,7 @@ imageApp.controller("ProfileController", function($scope,$http, $state, $httpPar
         contentType:"application/json"
         
     }).success(function(data){
-    // alert(data[0]._id.$oid);
-      
-         
+       
           $http({
               method: 'PUT' ,   
         url: 'https://api.mongolab.com/api/1/databases/aselab7/collections/users/'+data[0]._id.$oid+'?apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
@@ -796,8 +583,6 @@ imageApp.controller("ProfileController", function($scope,$http, $state, $httpPar
               $scope.changemsg = "User details are changed successfully";
              })
                 
-            
-                 
     })
     }
 
@@ -813,14 +598,13 @@ imageApp.controller("ChangePassController", function($scope,$http, $state, $http
            
  var name = localStorage.getItem("name");
        $scope.name= "Welcome "+name;
-       //alert("name : "+name);
-             $http({
+       
+       $http({
         method: 'GET',
         url: 'https://api.mongolab.com/api/1/databases/aselab7/collections/users?q={name:\''+name+'\'}&apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
         contentType:"application/json"
         
     }).success(function(data){
-    // alert(data[0]._id.$oid);
       if (name == data[0].name ) {
          
           $http({
@@ -830,7 +614,6 @@ imageApp.controller("ChangePassController", function($scope,$http, $state, $http
 		 
 		  contentType: "application/json"
              }).success(function (data) { 
-            // alert("success");
               $scope.passmsg = "Password is changed successfully";
              })
                 
@@ -842,7 +625,7 @@ imageApp.controller("ChangePassController", function($scope,$http, $state, $http
 
 });
 
-
+//In this user can view his invoice after shopping 
 imageApp.controller("InvoiceController", function($scope, $http, $state, $cordovaBarcodeScanner) {
     
     
@@ -853,14 +636,11 @@ $scope.product = [];
     
      
     var productLen = localStorage.getItem("productLength");
-        
-          //alert("productLen : "+productLen);
-    
+     
     for(var i=0;i<productLen;i++){
            
         var prodTemp = localStorage.getItem("itemList"+i);
-        //alert("value of "+i+" : "+prodTemp);
-        
+       
         if(prodTemp !=""){
             $scope.productDB.push(prodTemp);
        
@@ -870,11 +650,8 @@ $scope.product = [];
         $scope.product.push({productName:prodTemp1[0],productPrice:prodTemp1[1],index:i})
         }
         
-        
-        
-        //localStorage.setItem("itemList"+i,"");
-        }
-    //alert("product len : "+$scope.product.length);
+    }
+    
     $scope.productLen = $scope.product.length;
     
     $scope.total = Math.round(total * 100) / 100;
@@ -882,26 +659,16 @@ $scope.product = [];
     $scope.amount  =  Math.round(($scope.total +  $scope.tax)*100) / 100;;  
    
     $scope.deleteItem = function(index) {
-        ////alert("index : "+index);
-        //alert("before delet : "+localStorage.getItem("itemList"+index));
         localStorage.setItem("itemList"+index,"");
-        //alert("after delet : "+localStorage.getItem("itemList"+index));
         
         location.reload();
-        //$state.go("invoice");
         
     }
     
     $scope.addItem = function() {
-       // $state.go("itemscan");
-        
         
         $cordovaBarcodeScanner.scan().then(function(barcodeData) {
-            
-        // Success! Barcode data is here
-            //alert("text : "+barcodeData.text);
-            //alert("format : "+barcodeData.format);
-            text = barcodeData.text;
+           text = barcodeData.text;
             format = barcodeData.format;
             $scope.barcode = text;
             $scope.format = format;
@@ -911,53 +678,31 @@ $scope.product = [];
             //walmart
             var url = 'http://api.walmartlabs.com/v1/items?apiKey=avwybe6h7zkrmwvr3mqbs3r3&upc='+text+'&format=json';
     
-                //alert("url : "+url);
             $http.get(url).success(function(data){
-
-
-              // alert("out");
-              console.log(data);
+                console.log(data);
 
                   name = data.items[0].name;
                price = data.items[0].salePrice;
 
-               /* alert("name : "+name);
-                alert("price : "+price);*/
-                
-            //$scope.end_place = name;
-            //$scope.price = price;
-            //$scope.productdetails = "Product : "+name+" : Price : "+price;    
-            
-            //$scope.productName.push(name); 
-           // $scope.productPrice.push(price);
-           // $scope.product.push({productName:name,productPrice:price});
-           // $scope.product.push(name+"|"+price);
-           // $scope.product.push(price);    
-                
-                
-           // $scope.scans.push( "Product : "+name+" : Price : "+price); 
-                var preProdLen = $scope.productLen;
+              var preProdLen = $scope.productLen;
                  $scope.productLen = parseInt($scope.productLen)+1;
                 var productItem = name+"|"+price;
                 localStorage.setItem("itemList"+preProdLen,productItem);
-               // alert("loc sto : "+localStorage.getItem("itemList"+$scope.productLen));
+              
                 localStorage.setItem("productLength",$scope.productLen);
             $scope.product.push({productName:name,productPrice:price,index:$scope.productLen})
             
-      var total = parseFloat($scope.total)+parseFloat(price);     
-    
-    $scope.total = Math.round(total * 100) / 100;
-    $scope.tax = Math.round((($scope.total * 5)/100)*100)/100;
-    $scope.amount  =  Math.round(($scope.total +  $scope.tax)*100) / 100;
+              var total = parseFloat($scope.total)+parseFloat(price);     
+
+            $scope.total = Math.round(total * 100) / 100;
+            $scope.tax = Math.round((($scope.total * 5)/100)*100)/100;
+            $scope.amount  =  Math.round(($scope.total +  $scope.tax)*100) / 100;
                 
                  location.reload();
             
             });
             
             
-            //alert(); 
-            
-            /*$scope.barcodes.push( "Barcode is "+text+" with format "+format);*/
       },function(error) {
        alert("an error occured");
       });
@@ -968,16 +713,13 @@ $scope.product = [];
     
     
     $scope.confirm = function() {
-       // alert($scope.tax);
-        
+       
         var productLen = localStorage.getItem("productLength");
-        
-          //alert("productLen : "+productLen);
-    
+       
     for(var i=0;i<productLen;i++){
-        //alert("item before: "+localStorage.getItem("itemList"+i));
+        
             localStorage.setItem("itemList"+i,"");
-        //alert("item after: "+localStorage.getItem("itemList"+i));
+        
         }
         
         var prodList = $scope.productDB;
@@ -987,25 +729,16 @@ $scope.product = [];
         var date = new Date();
      var mon = date.getMonth();
      var mon1 = parseInt(mon)+1;
-     //alert("date : "+date);
-     //alert("actual date : "+mon1+"/"+date.getDate()+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds());
+    
      var actualDate = mon1+"/"+date.getDate()+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();    
-        
-        
-        
         $http({
                     method: 'POST',
                     url : 'https://api.mongolab.com/api/1/databases/aselab7/collections/products?apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
                     data: JSON.stringify({
-                                //name: name,
-                         mobile: mobile,
-                       
+                       mobile: mobile,
                         products:prodList,
                         date:actualDate
-                            
-                        
-                                
-                            }),
+                     }),
                     contentType: "application/json"
                 }).success(function() {
                     
@@ -1022,8 +755,6 @@ $scope.product = [];
                         preRecords.push(prodList[i]);
                     }
                  
-                 
-
                   $http({
                       method: 'PUT' ,   
                         url: 'https://api.mongolab.com/api/1/databases/aselab7/collections/recommendation/'+data[0]._id.$oid+'?apiKey=BRAZaLJlcYe5QBqAEzUAhchG6H_jQx1k',
@@ -1032,24 +763,20 @@ $scope.product = [];
                           contentType: "application/json"
                              }).success(function (data) { 
                             $state.go("home");
+                      localStorage.setItem("saveSuccess","Invoice has been saved successfully");
                      location.reload();
                              })
       
             })
     
         })
-        
-
    
-     }
-    
-    
-    
-    
+     }       
 
     
 });
 
+//in  this user can view his previous bils    
 imageApp.controller("MyBillsController", function($scope, $http, $state) {
 
    $scope.user = "Welcome : "+localStorage.getItem("name");
@@ -1058,25 +785,20 @@ imageApp.controller("MyBillsController", function($scope, $http, $state) {
     
     $scope.dates = [];
     var actualDates = dates.split(",");
-    //alert("date len : "+actualDates.length);
     
     for(var i=0;i<actualDates.length;i++){
         $scope.dates.push(actualDates[i]);
     }
     
-    
     $scope.thisBill = function(date) {
-        //alert("this bill : "+date);
         localStorage.setItem("invoiceDate",date);
         $state.go("preInvoice");
     }
-    
-
-    
+   
 });
 
 
-
+//In this user can view his inovoice
 
 imageApp.controller("PreInvoiceController", function($scope, $http) {
 
@@ -1095,28 +817,18 @@ imageApp.controller("PreInvoiceController", function($scope, $http) {
         .success(function(data){
            
             if(data==""){
-                //alert("null");
                 $state.go("myBills");
-                  //$scope.errormsg = "Bills found"       
                       
             }else{
                
-               
-                
-                //alert("data length : "+data.length);
-              
                 for(var i=0;i<data.length;i++){
                   if(date == data[i].date){
-                      //alert("prod len : "+data[i].products.length)
                       
                       for(var j=0;j<data[i].products.length;j++){
-                          
-                            
-                            var prodTemp1 = data[i].products[j].split("|");
+                           var prodTemp1 = data[i].products[j].split("|");
                             total = total+parseFloat(prodTemp1[1]);
                             
                             $scope.products.push({productName:prodTemp1[0],productPrice:prodTemp1[1]})
-                          
                            
                             }
                         $scope.total = Math.round(total * 100) / 100;
@@ -1127,15 +839,13 @@ imageApp.controller("PreInvoiceController", function($scope, $http) {
                     
                 }
                 
-               
-                  
             }
      })
     
 });
 
-
-imageApp.controller("RecommendController", function($scope, $http) {
+// In this user can view his recommendations for his next purchase    
+imageApp.controller("RecommendController", function($scope, $http,$state) {
 
     var mobile = localStorage.getItem("mobile");
       $http({
@@ -1149,11 +859,8 @@ imageApp.controller("RecommendController", function($scope, $http) {
                    var preRecords = data[0].products;
           var recordsCounter = [];
           $scope.records = [];
-                   /* for(var i=0;i<data[0].products.length;i++){
-                        var pro = data[0].products[i];
-                        }*/
-                      
-                                         
+           $scope.recordsDis = [];
+                              
                          var a = [], b = [], prev;
     
                         preRecords.sort();
@@ -1166,23 +873,36 @@ imageApp.controller("RecommendController", function($scope, $http) {
                             }
                             prev = preRecords[i];
                         }
-                        
-            //alert(a);
-          //alert(b);
           
                         for ( var i = 0; i < b.length; i++ ) {
                             recordsCounter.push(b[i]+"/"+a[i]);
-                             $scope.records.push({productName:a[i],productQuantity:b[i]})
+                             $scope.records.push({index:i+1,productName:a[i],productQuantity:b[i]})
+                             var name = a[i].split("|");
+                             $scope.recordsDis.push(i+1+" : "+name[0]);
                         }
-                        //preRecords.push(prodList[i]);
-                    
-                 
-                // alert($scope.records);
-
-                  
+                       
       
             })
+   
+    $scope.addToCart = function(date) {
+                
+        $scope.test=[];
+        
+        $scope.test.push("Coleman Twin Single High Airbed|20.97|Sports & Outdoors");
+        $scope.test.push("NIVEA Men Express Absorption Revitalizing Lotion, 16.9 fl oz|5.92|Beauty");
+        $scope.test.push("Head & Shoulders Clinical Strength Dandruff Shampoo, 13.5 fl oz|6.78|Beauty");
+        
+        for(var i=0;i<$scope.test.length;i++){
+            localStorage.setItem("itemList"+i,$scope.test[i]);
+           
+        }
+        
+       
+        localStorage.setItem("productLength",$scope.test.length);
+       //  localStorage.setItem("productLength",$scope.product.length);
+               
+        $state.go("invoice");
+    }
+    
     
 });
-
-

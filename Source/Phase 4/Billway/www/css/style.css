@@ -15,6 +15,7 @@ color: green;
 color: crimson;
 }
 
+
 .barc{
 
 background-image: url(http://www.pageresource.com/wallpapers/wallpaper/fantasy-purple.jpg);
@@ -22,13 +23,16 @@ background-image: url(http://www.pageresource.com/wallpapers/wallpaper/fantasy-p
 }
 
 .list.list-inset{
-    background-color: floralwhite;
+    /*background-color: floralwhite;*/
+    filter: alpha(opacity=90);
 }
 
-/*.bar.bar-stable .title {
-    background-color: bisque;
+.bar.bar-stable .title {
+    background-color: deeppink;
     text-decoration-color: black;
-}*/
+}
+
+
 
 
 table, th, td {
